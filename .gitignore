@@ -1,0 +1,12 @@
+.idea/
+target/
+*/impl/target/
+**/api/target/
+features/features-p4plugin/target/
+karaf/target/
+*.iml
+*.ipr
+*.iws
+*.class
+*~
+.DS_Store

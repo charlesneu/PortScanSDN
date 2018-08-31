@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright © 2018 Cássio Tatsch and others. All rights reserved.
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
+-->
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0" name="odl-netsec-persistence">
+    <repository>mvn:org.apache.karaf.features/enterprise/${karaf.version}/xml/features</repository>
+    <repository>mvn:org.ops4j.pax.jdbc/pax-jdbc-features/1.1.0/xml/features</repository>
+    <feature name="odl-netsec-persistence" version="${project.version}">
+        <feature dependency="false" prerequisite="false">jdbc</feature>
+        <feature dependency="false" prerequisite="false">transaction</feature>
+        <feature dependency="false" prerequisite="false">jndi</feature>
+        <feature dependency="false" prerequisite="false">pax-jdbc-h2</feature>
+        <feature dependency="false" prerequisite="false">pax-jdbc-config</feature>
+        <feature dependency="false" prerequisite="false">pax-jdbc-pool-dbcp2</feature>
+        <feature dependency="false" prerequisite="false">jpa</feature>
+        <feature dependency="false" prerequisite="false">hibernate</feature>
+    </feature>
+</features>
