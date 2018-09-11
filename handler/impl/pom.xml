@@ -14,12 +14,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <groupId>org.opendaylight.netsec</groupId>
         <artifactId>netsec-parent</artifactId>
         <version>0.1.3</version>
-        <relativePath>../parent</relativePath>
+        <relativePath>../../parent</relativePath>
     </parent>
 
     <groupId>org.opendaylight.netsec</groupId>
-    <artifactId>netsec-main</artifactId>
-    <name>netsec:main</name>
+    <artifactId>netsec-handler-impl</artifactId>
+    <version>0.1.3</version>
+    <name>netsec:handler-impl</name>
     <packaging>bundle</packaging>
 
     <dependencyManagement>
@@ -31,17 +32,22 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>org.opendaylight.l2switch</groupId>
+                <artifactId>l2switch-artifacts</artifactId>
+                <version>0.7.3</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
-
         <dependency>
-            <groupId>org.opendaylight.netsec</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>netsec-handler-model</artifactId>
             <version>${project.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.opendaylight.controller</groupId>
             <artifactId>sal-binding-api</artifactId>
@@ -107,7 +113,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Export-Package>org.opendaylight.netsec.main</Export-Package>
+                        <Export-Package>org.opendaylight.netsec.impl</Export-Package>
                         <Import-Package>*</Import-Package>
                     </instructions>
                 </configuration>

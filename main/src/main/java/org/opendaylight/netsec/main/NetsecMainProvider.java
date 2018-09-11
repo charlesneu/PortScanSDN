@@ -7,14 +7,14 @@
  */
 package org.opendaylight.netsec.main;
 
-import com.google.common.collect.ImmutableSet;
-import java.util.Objects;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
-import org.opendaylight.netsec.main.handler.AbstractPacketHandler;
-import org.opendaylight.netsec.main.handler.EthernetHandler;
+import org.opendaylight.netsec.main.flow.FlowWriterServiceImpl;
+import org.opendaylight.netsec.main.flow.InitialFlowWriter;
+import org.opendaylight.netsec.main.handler.PacketHandler;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.SalFlowService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netsec.netsec.config.rev180901.NetsecConfig;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,17 +22,18 @@ public class NetsecMainProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(NetsecMainProvider.class);
 
+    private Registration topoNodeListenerReg;
+    private Registration flowWriterReg;
 
     private final DataBroker dataBroker;
     private final NetsecConfig netsecConfig;
     private final NotificationProviderService notificationService;
     private final SalFlowService salFlowService;
-    ImmutableSet<AbstractPacketHandler> packetHandlers;
 
     public NetsecMainProvider(final DataBroker dataBroker,
-                              final NetsecConfig netsecConfig,
-                              final NotificationProviderService notificationService,
-                              final SalFlowService salFlowService) {
+            final NetsecConfig netsecConfig,
+            final NotificationProviderService notificationService,
+            final SalFlowService salFlowService) {
         this.dataBroker = dataBroker;
         this.netsecConfig = netsecConfig;
         this.notificationService = notificationService;
@@ -44,9 +45,34 @@ public class NetsecMainProvider {
      */
     public void init() {
         LOG.info("NetsecMainProvider Session Initiated");
-        LOG.info("NetsecMainConfig {}", netsecConfig.isIsLearningOnlyMode());
-        packetHandlers = new ImmutableSet.Builder<AbstractPacketHandler>()
-                .add(new EthernetHandler(notificationService)).build();
+
+        // Write initial flows
+        if (netsecConfig.isIsInstallDropallFlow()) {
+            LOG.info("Netsec will install a dropall flow on each switch");
+            InitialFlowWriter initialFlowWriter = new InitialFlowWriter(salFlowService);
+            initialFlowWriter.setFlowTableId(netsecConfig.getDropallFlowTableId());
+            initialFlowWriter.setFlowPriority(netsecConfig.getDropallFlowPriority());
+            initialFlowWriter.setFlowIdleTimeout(netsecConfig.getDropallFlowIdleTimeout());
+            initialFlowWriter.setFlowHardTimeout(netsecConfig.getDropallFlowHardTimeout());
+            topoNodeListenerReg = initialFlowWriter.registerAsDataChangeListener(dataBroker);
+        } else {
+            LOG.info("Dropall flows will not be installed");
+        }
+
+        if (netsecConfig.isIsLearningOnlyMode()) {
+            LOG.info("Netsec is in Learning Only Mode");
+        } else {
+            // Setup reactive flow writer
+            LOG.info("Netsec will react to network traffic and install flows");
+            FlowWriterServiceImpl flowWriterService = new FlowWriterServiceImpl(salFlowService);
+            flowWriterService.setFlowTableId(netsecConfig.getReactiveFlowTableId());
+            flowWriterService.setFlowPriority(netsecConfig.getReactiveFlowPriority());
+            flowWriterService.setFlowIdleTimeout(netsecConfig.getReactiveFlowIdleTimeout());
+            flowWriterService.setFlowHardTimeout(netsecConfig.getReactiveFlowHardTimeout());
+
+            PacketHandler packetHandler = new PacketHandler(flowWriterService);
+            flowWriterReg = notificationService.registerNotificationListener(packetHandler);
+        }
 
     }
 
@@ -54,10 +80,12 @@ public class NetsecMainProvider {
      * Method called when the blueprint container is destroyed.
      */
     public void close() {
-        if (Objects.nonNull(packetHandlers) && !packetHandlers.isEmpty()) {
-            for (AbstractPacketHandler handler : packetHandlers) {
-                handler.close();
-            }
+        if (flowWriterReg != null) {
+            flowWriterReg.close();
+        }
+
+        if (topoNodeListenerReg != null) {
+            topoNodeListenerReg.close();
         }
         LOG.info("PacketHandler (instance {}) torn down.", this);
         LOG.info("NetsecMainProvider Closed");

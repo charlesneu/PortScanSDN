@@ -25,16 +25,22 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <dependencyManagement>
         <dependencies>
-        
-            <dependency>
+
+<!--            <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>netsec-persistence-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
-      
+
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>netsec-persistence-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>-->
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>netsec-handler-impl</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -43,7 +49,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <artifactId>netsec-main</artifactId>
                 <version>${project.version}</version>
             </dependency>
-      
+
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>features-netsec</artifactId>
@@ -51,7 +57,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <classifier>features</classifier>
                 <type>xml</type>
             </dependency>
-      
+
         </dependencies>
     </dependencyManagement>
 </project>
