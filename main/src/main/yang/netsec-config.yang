@@ -1,0 +1,20 @@
+module netsec-config {
+
+    yang-version 1.1;
+    namespace "urn:opendaylight:netsec:netsec-config";
+    prefix "netsec-config";
+
+    description
+        "This module contains the base configuration for main implementation.";
+    
+    revision "2018-09-01" { 
+        description "Initial revision of netsec model";
+    }
+
+    container netsec-config {
+        leaf is-learning-only-mode {
+            type boolean;
+            default false;
+        }
+    }
+}

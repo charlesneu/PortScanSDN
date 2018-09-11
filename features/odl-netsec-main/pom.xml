@@ -31,14 +31,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.opendaylight.controller</groupId>
-            <artifactId>odl-mdsal-all</artifactId>
-            <version>${mdsal.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-        
+
         <dependency>
             <groupId>org.opendaylight.netsec</groupId>
             <artifactId>netsec-main</artifactId>
