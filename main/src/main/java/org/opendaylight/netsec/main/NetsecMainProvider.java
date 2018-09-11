@@ -7,8 +7,12 @@
  */
 package org.opendaylight.netsec.main;
 
+import com.google.common.collect.ImmutableSet;
+import java.util.Objects;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
+import org.opendaylight.netsec.main.handler.AbstractPacketHandler;
+import org.opendaylight.netsec.main.handler.EthernetHandler;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.SalFlowService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netsec.netsec.config.rev180901.NetsecConfig;
 import org.slf4j.Logger;
@@ -23,6 +27,7 @@ public class NetsecMainProvider {
     private final NetsecConfig netsecConfig;
     private final NotificationProviderService notificationService;
     private final SalFlowService salFlowService;
+    ImmutableSet<AbstractPacketHandler> packetHandlers;
 
     public NetsecMainProvider(final DataBroker dataBroker,
                               final NetsecConfig netsecConfig,
@@ -40,12 +45,21 @@ public class NetsecMainProvider {
     public void init() {
         LOG.info("NetsecMainProvider Session Initiated");
         LOG.info("NetsecMainConfig {}", netsecConfig.isIsLearningOnlyMode());
+        packetHandlers = new ImmutableSet.Builder<AbstractPacketHandler>()
+                .add(new EthernetHandler(notificationService)).build();
+
     }
 
     /**
      * Method called when the blueprint container is destroyed.
      */
     public void close() {
+        if (Objects.nonNull(packetHandlers) && !packetHandlers.isEmpty()) {
+            for (AbstractPacketHandler handler : packetHandlers) {
+                handler.close();
+            }
+        }
+        LOG.info("PacketHandler (instance {}) torn down.", this);
         LOG.info("NetsecMainProvider Closed");
     }
 }
