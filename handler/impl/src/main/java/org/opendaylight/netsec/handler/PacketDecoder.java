@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.netsec.handler.util.PacketUtils;
@@ -39,6 +41,9 @@ public class PacketDecoder implements PacketProcessingListener, AutoCloseable {
 
     final NotificationProviderService notificationService;
 
+    private final ExecutorService publishExecutor =
+            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
     public PacketDecoder(final HandlerConfig handlerConfig, final NotificationProviderService notificationService) {
         this.handlerConfig = handlerConfig;
         this.packetCount = new AtomicInteger(0);
@@ -64,6 +69,10 @@ public class PacketDecoder implements PacketProcessingListener, AutoCloseable {
 
         final byte[] rawPacket = packetReceived.getPayload();
 
+        if (rawPacket.length < 52) { //Not TCP or UDP
+            return;
+        }
+
         byte[] flags = PacketUtils.extractFlags(rawPacket);
 
         int flag = (int) flags[0];
@@ -82,7 +91,8 @@ public class PacketDecoder implements PacketProcessingListener, AutoCloseable {
                 .setDstMac(PacketUtils.extractDstMacAsString(rawPacket))
                 .setSrcPort((int) PacketUtils.extractSrcPortNumberAsShort(rawPacket))
                 .setDstPort((int) PacketUtils.extractDstPortNumberAsShort(rawPacket))
-                .setIncomeDateTime(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE)).build();
+                .setIncomeDateTime(LocalDateTime.now().format(DateTimeFormatter.ISO_DATE))
+                .setIngressPort(packetReceived.getIngress().getValue()).build();
 
         LOG.debug("Received from {} to {} on port {}.", npReceived.getSrcIpv4(),
                 npReceived.getDstIpv4(), npReceived.getDstPort());
@@ -107,7 +117,10 @@ public class PacketDecoder implements PacketProcessingListener, AutoCloseable {
         }
 
         LOG.error("Publishing NetsecPacketReceived {}", packetReceived.toString());
-        notificationService.publish(npReceived);
+        publishExecutor.execute(() -> {
+            notificationService.publish(npReceived);
+        });
+
 
     }
 
@@ -115,8 +128,7 @@ public class PacketDecoder implements PacketProcessingListener, AutoCloseable {
      * Decide if packets with the same src/dst IP have already been processed. If they haven't been processed, store the
      * IPs so they will be considered processed.
      *
-     * @param srcIpStr source IP
-     * @param dstIpStr destination IP
+     * @param netsecPacket destination IP
      * @return {@code true} if the src/dst IP has already been processed, {@code false} otherwise
      */
     private boolean bufferPktIn(final NetsecPacketReceived netsecPacket) {

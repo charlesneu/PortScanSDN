@@ -24,9 +24,11 @@ import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.openflowplugin.api.OFConstants;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.DropActionCaseBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.OutputActionCaseBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.output.action._case.OutputActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.Action;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
@@ -41,6 +43,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.SalF
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowCookie;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowModFlags;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowRef;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.OutputPortValues;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.InstructionsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.Match;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.flow.MatchBuilder;
@@ -53,6 +56,9 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeRef
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.l2.types.rev130827.EtherType;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.ethernet.match.fields.EthernetTypeBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.model.match.types.rev131026.match.EthernetMatchBuilder;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -168,7 +174,8 @@ public class InitialFlowWriter implements DataTreeChangeListener<Node> {
             InstanceIdentifier<Flow> flowId = getFlowInstanceId(tableId);
 
             //add drop all flow
-            writeFlowToController(nodeId, tableId, flowId, createDropAllFlow(flowTableId, flowPriority));
+            writeFlowToController(nodeId, tableId, flowId, createArpNormalFlow(flowTableId, flowPriority));
+            writeFlowToController(nodeId, tableId, flowId, createOutputControllerFlow(flowTableId, flowPriority));
 
             LOG.debug("Added initial flows for node {} ", nodeId);
         }
@@ -189,7 +196,7 @@ public class InitialFlowWriter implements DataTreeChangeListener<Node> {
             return tableId.child(Flow.class, flowKey);
         }
 
-        private Flow createDropAllFlow(Short tableId, int priority) {
+        /*private Flow createDropAllFlow(Short tableId, int priority) {
 
             // start building flow
             FlowBuilder dropAll = new FlowBuilder() //
@@ -232,12 +239,129 @@ public class InitialFlowWriter implements DataTreeChangeListener<Node> {
                     .setFlags(new FlowModFlags(false, false, false, false, false));
 
             return dropAll.build();
+        }*/
+
+        private Flow createArpNormalFlow(Short tableId, int priority) {
+
+            // start building flow
+            FlowBuilder outToController = new FlowBuilder() //
+                    .setTableId(tableId) //
+                    .setFlowName("toctrl");
+
+            // use its own hash code for id.
+            outToController.setId(new FlowId(Long.toString(outToController.hashCode())));
+
+            Match match = new MatchBuilder()
+                    .setEthernetMatch(new EthernetMatchBuilder()
+                            .setEthernetType(new EthernetTypeBuilder()
+                                    .setType(new EtherType(Long.valueOf(2054))).build()).build()).build();
+
+
+            Action dropAllAction = new ActionBuilder()
+                    .setOrder(0)
+                    .setKey(new ActionKey(0))
+                    .setAction(new OutputActionCaseBuilder()
+                            .setOutputAction(new OutputActionBuilder()
+                                    .setMaxLength(0xffff)
+                                    .setOutputNodeConnector(new Uri(OutputPortValues.NORMAL.getName()))
+                                    .build())
+                            .build())
+                    .build();
+
+            // Create an Apply Action
+            ApplyActions applyActions = new ApplyActionsBuilder().setAction(ImmutableList.of(dropAllAction))
+                    .build();
+
+            // Wrap our Apply Action in an Instruction
+            Instruction applyActionsInstruction = new InstructionBuilder() //
+                    .setOrder(0)
+                    .setInstruction(new ApplyActionsCaseBuilder()//
+                            .setApplyActions(applyActions) //
+                            .build()) //
+                    .build();
+
+            // Put our Instruction in a list of Instructions
+            outToController
+                    .setMatch(match) //
+                    .setInstructions(new InstructionsBuilder() //
+                            .setInstruction(ImmutableList.of(applyActionsInstruction)) //
+                            .build()) //
+                    .setPriority(priority) //
+                    .setBufferId(OFConstants.OFP_NO_BUFFER) //
+                    .setHardTimeout(flowHardTimeout) //
+                    .setIdleTimeout(flowIdleTimeout) //
+                    .setCookie(new FlowCookie(BigInteger.valueOf(flowCookieInc.getAndIncrement())))
+                    .setFlags(new FlowModFlags(false, false, false, false, false));
+
+            return outToController.build();
+        }
+
+        private Flow createOutputControllerFlow(Short tableId, int priority) {
+
+            // start building flow
+            FlowBuilder outToController = new FlowBuilder() //
+                    .setTableId(tableId) //
+                    .setFlowName("toctrl");
+
+            // use its own hash code for id.
+            outToController.setId(new FlowId(Long.toString(outToController.hashCode())));
+
+            Match match = new MatchBuilder().build();
+
+            Action dropAllAction = getSendToControllerAction();
+
+            // Create an Apply Action
+            ApplyActions applyActions = new ApplyActionsBuilder().setAction(ImmutableList.of(dropAllAction))
+                    .build();
+
+            // Wrap our Apply Action in an Instruction
+            Instruction applyActionsInstruction = new InstructionBuilder() //
+                    .setOrder(0)
+                    .setInstruction(new ApplyActionsCaseBuilder()//
+                            .setApplyActions(applyActions) //
+                            .build()) //
+                    .build();
+
+            // Put our Instruction in a list of Instructions
+            outToController
+                    .setMatch(match) //
+                    .setInstructions(new InstructionsBuilder() //
+                            .setInstruction(ImmutableList.of(applyActionsInstruction)) //
+                            .build()) //
+                    .setPriority(priority) //
+                    .setBufferId(OFConstants.OFP_NO_BUFFER) //
+                    .setHardTimeout(flowHardTimeout) //
+                    .setIdleTimeout(flowIdleTimeout) //
+                    .setCookie(new FlowCookie(BigInteger.valueOf(flowCookieInc.getAndIncrement())))
+                    .setFlags(new FlowModFlags(false, false, false, false, false));
+
+            return outToController.build();
+        }
+
+        /**
+         * Creates and returns a SEND_TO_CONTROLLER action. Each flow will be
+         * redirected to the controller.
+         *
+         * @return a SEND_TO_CONTROLLER action.
+         */
+        private Action getSendToControllerAction() {
+            Action sendToController = new ActionBuilder()
+                    .setOrder(0)
+                    .setKey(new ActionKey(0))
+                    .setAction(new OutputActionCaseBuilder()
+                            .setOutputAction(new OutputActionBuilder()
+                                    .setMaxLength(0xffff)
+                                    .setOutputNodeConnector(new Uri(OutputPortValues.CONTROLLER.toString()))
+                                    .build())
+                            .build())
+                    .build();
+            return sendToController;
         }
 
         private Future<RpcResult<AddFlowOutput>> writeFlowToController(InstanceIdentifier<Node> nodeInstanceId,
-                InstanceIdentifier<Table> tableInstanceId,
-                InstanceIdentifier<Flow> flowPath,
-                Flow flow) {
+                                                                       InstanceIdentifier<Table> tableInstanceId,
+                                                                       InstanceIdentifier<Flow> flowPath,
+                                                                       Flow flow) {
             LOG.trace("Adding flow to node {}",
                     nodeInstanceId.firstKeyOf(Node.class, NodeKey.class).getId().getValue());
             final AddFlowInputBuilder builder = new AddFlowInputBuilder(flow);

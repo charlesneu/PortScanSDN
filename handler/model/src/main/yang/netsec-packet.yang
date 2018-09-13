@@ -72,6 +72,10 @@ module netsec-packet {
             description "Data de chegada do pacote";
         }
 
+        leaf ingress-port {
+            type instance-identifier;
+            description "Packet ingress port";
+        }
 
     }
 

@@ -70,7 +70,7 @@ public class NetsecMainProvider {
             flowWriterService.setFlowIdleTimeout(netsecConfig.getReactiveFlowIdleTimeout());
             flowWriterService.setFlowHardTimeout(netsecConfig.getReactiveFlowHardTimeout());
 
-            PacketHandler packetHandler = new PacketHandler(flowWriterService);
+            PacketHandler packetHandler = new PacketHandler(flowWriterService, dataBroker);
             flowWriterReg = notificationService.registerNotificationListener(packetHandler);
         }
 

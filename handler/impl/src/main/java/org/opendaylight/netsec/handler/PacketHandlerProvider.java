@@ -9,6 +9,7 @@ package org.opendaylight.netsec.handler;
 
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netsec.handler.config.rev180901.HandlerConfig;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +19,7 @@ public class PacketHandlerProvider {
 
     private final NotificationProviderService notificationService;
     private final HandlerConfig handlerConfig;
-    private PacketDecoder packetDecoder;
+    private Registration packetHandlerReg;
 
     public PacketHandlerProvider(
             final NotificationProviderService notificationService,
@@ -31,7 +32,8 @@ public class PacketHandlerProvider {
      * Method called when the blueprint container is created.
      */
     public void init() {
-        packetDecoder = new PacketDecoder(handlerConfig, notificationService);
+        packetHandlerReg = notificationService
+                .registerNotificationListener(new PacketDecoder(handlerConfig, notificationService));
         LOG.info("Netsec Packet Handler Initialized");
     }
 
@@ -39,7 +41,9 @@ public class PacketHandlerProvider {
      * Method called when the blueprint container is destroyed.
      */
     public void close() {
-        packetDecoder.close();
+        if (packetHandlerReg != null) {
+            packetHandlerReg.close();
+        }
         LOG.info("Netsec Packet Handler Closed");
     }
 }
