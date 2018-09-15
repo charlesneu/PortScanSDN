@@ -7,6 +7,7 @@
  */
 package org.opendaylight.netsec.main.flow;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,4 +31,10 @@ public class NetsecPacket {
     private Integer dstPort;
     private LocalDateTime incomeTime;
     InstanceIdentifier<?> ingressPort;
+
+    /* Flow Stats */
+    private Long durationSeconds;
+    private Long durationNanoSeconds;
+    private BigInteger packetCount;
+    private BigInteger byteCount;
 }

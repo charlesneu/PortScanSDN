@@ -36,7 +36,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <modules>
         <module>parent</module>
-        <!--<module>handler</module>-->
         <module>main</module>
         <module>karaf</module>
         <module>features</module>

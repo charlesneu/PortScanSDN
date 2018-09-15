@@ -23,7 +23,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <name>netsec:karaf</name>
 
     <properties>
-        <karaf.localFeature>odl-netsec-main</karaf.localFeature>
+        <karaf.localFeature>odl-netsec-all</karaf.localFeature>
     </properties>
 
     <dependencyManagement>

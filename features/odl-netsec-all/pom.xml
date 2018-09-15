@@ -24,13 +24,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <packaging>feature</packaging>
 
     <dependencies>
-        <!--<dependency>-->
-            <!--<groupId>${project.groupId}</groupId>-->
-            <!--<artifactId>odl-netsec-handler</artifactId>-->
-            <!--<version>${project.version}</version>-->
-            <!--<type>xml</type>-->
-            <!--<classifier>features</classifier>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>odl-netsec-main</artifactId>

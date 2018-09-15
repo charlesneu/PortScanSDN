@@ -60,5 +60,9 @@ module netsec-config {
             type uint16;
             default 60000;
         }
+        leaf collection-interval {
+            type uint32;
+            default 300000;
+        }
     }
 }

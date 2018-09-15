@@ -284,7 +284,7 @@ public class FlowWriterService {
         builder.setFlowRef(new FlowRef(flowPath));
         builder.setFlowTable(new FlowTableRef(tableInstanceId));
         builder.setTransactionUri(new Uri(flow.getId().getValue()));
-        LOG.trace("Writing flow");
+        LOG.trace("Writing flow {}", flow.getFlowName());
         return salFlowService.addFlow(builder.build());
     }
 }

@@ -24,7 +24,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <packaging>pom</packaging>
 
     <modules>
-        <!--<module>odl-netsec-handler</module>-->
         <module>odl-netsec-main</module>
         <module>odl-netsec-all</module>
         <module>features-netsec</module>

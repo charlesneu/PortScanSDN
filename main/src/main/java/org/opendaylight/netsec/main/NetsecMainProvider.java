@@ -9,6 +9,7 @@ package org.opendaylight.netsec.main;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
+import org.opendaylight.netsec.main.collection.FlowStatsCollection;
 import org.opendaylight.netsec.main.flow.FlowWriterService;
 import org.opendaylight.netsec.main.flow.InitialFlowWriter;
 import org.opendaylight.netsec.main.handler.PacketHandler;
@@ -29,6 +30,7 @@ public class NetsecMainProvider {
     private final NetsecConfig netsecConfig;
     private final NotificationProviderService notificationService;
     private final SalFlowService salFlowService;
+    private FlowStatsCollection statsCollection;
 
     public NetsecMainProvider(final DataBroker dataBroker,
                               final NetsecConfig netsecConfig,
@@ -73,6 +75,9 @@ public class NetsecMainProvider {
             PacketHandler packetHandler = new PacketHandler(netsecConfig, flowWriterService);
             flowWriterReg = notificationService.registerNotificationListener(packetHandler);
         }
+
+        statsCollection = new FlowStatsCollection(dataBroker);
+        new Thread(statsCollection, "StatsCollection").start();
 
     }
 

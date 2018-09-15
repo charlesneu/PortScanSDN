@@ -8,18 +8,14 @@
 package org.opendaylight.netsec.main.handler;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.opendaylight.netsec.main.flow.FlowWriterService;
 import org.opendaylight.netsec.main.flow.NetsecPacket;
 import org.opendaylight.netsec.main.util.PacketUtils;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netsec.netsec.config.rev180901.NetsecConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketReceived;
@@ -38,7 +34,7 @@ public class PacketHandler implements PacketProcessingListener, AutoCloseable {
     private AtomicInteger packetCount;
 
     /* Last packet in received, used to not process repeated packets */
-    private final Map<Integer, Long> pktInBuffer;
+    private final ConcurrentHashMap<Integer, Long> pktInBuffer;
 
     private final ExecutorService publishExecutor =
             Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -46,7 +42,7 @@ public class PacketHandler implements PacketProcessingListener, AutoCloseable {
     public PacketHandler(final NetsecConfig netsecConfig, final FlowWriterService flowWriterService) {
         this.netsecConfig = netsecConfig;
         this.packetCount = new AtomicInteger(0);
-        this.pktInBuffer = new HashMap<>();
+        this.pktInBuffer = new ConcurrentHashMap<Integer, Long>();
         this.flowWriterService = flowWriterService;
         LOG.info("PacketIn listener started");
     }
@@ -59,6 +55,12 @@ public class PacketHandler implements PacketProcessingListener, AutoCloseable {
             return;
         }
 
+        // Get the metadata
+        if (packetReceived.getMatch() == null) {
+            LOG.error("Ipv4PacketInHandler Cant get packet flow match {}", packetReceived.toString());
+            return;
+        }
+
         packetCount.incrementAndGet();
         // If number of packets receiver too high, purge buffer
         if (packetCount.incrementAndGet() > netsecConfig.getHandlerPacketCountPurge()) {
@@ -67,22 +69,25 @@ public class PacketHandler implements PacketProcessingListener, AutoCloseable {
         }
 
         final byte[] rawPacket = packetReceived.getPayload();
-
         if (rawPacket.length < 52) { //Not TCP or UDP
             return;
         }
 
         byte[] flags = PacketUtils.extractFlags(rawPacket);
+        if (flags[0] != 2) {
+            LOG.trace("Not SYN Packet, discarded.");
+            return;
+        }
 
-        int flag = (int) flags[0];
-
-        if (flag != 2) {
-            LOG.warn("Not SYN Packet, discarded.");
+        int etherType = PacketUtils.extractEtherTypeAsInt(rawPacket);
+        // Process only IPv4 packets
+        if (etherType != 2048) {
+            LOG.trace("Not Ipv4 {}", etherType);
             return;
         }
 
         NetsecPacket packet = NetsecPacket.builder()
-                .etherType(PacketUtils.extractEtherTypeAsInt(rawPacket))
+                .etherType(etherType)
                 .srcIpv4(PacketUtils.extractSrcIpAsString(rawPacket) + "/32")
                 .dstIpv4(PacketUtils.extractDstIpAsString(rawPacket) + "/32")
                 .srcMac(PacketUtils.extractSrcMacAsString(rawPacket))
@@ -95,11 +100,6 @@ public class PacketHandler implements PacketProcessingListener, AutoCloseable {
         LOG.debug("Received from {} to {} on port {}.", packet.getSrcIpv4(),
                 packet.getDstIpv4(), packet.getDstPort());
 
-        // Process only IPv4 packets
-        if (!packet.getEtherType().equals(2048)) {
-            LOG.warn("Not Ipv4 {}", packet.getEtherType());
-            return;
-        }
 
         // Since all packets sent to SF are PktIn, only need to handle the first
         // one. In OpenFlow 1.5 we'll be able to do the PktIn on TCP Syn only.
@@ -108,17 +108,7 @@ public class PacketHandler implements PacketProcessingListener, AutoCloseable {
             return;
         }
 
-        // Get the metadata
-        if (packetReceived.getMatch() == null) {
-            LOG.error("Ipv4PacketInHandler Cant get packet flow match {}", packetReceived.toString());
-            return;
-        }
-
-        LOG.info("Publishing NetsecPacket {}", packet.toString());
         publishExecutor.execute(() -> {
-            LOG.info("Adding flow");
-            Uri inputPort = packet.getIngressPort().firstKeyOf(NodeConnector.class).getId();
-
             flowWriterService.addBidirecionalFlows(packet);
         });
 
@@ -163,7 +153,7 @@ public class PacketHandler implements PacketProcessingListener, AutoCloseable {
      */
     private void purgePktInBuffer() {
         long currentMillis = System.currentTimeMillis();
-        Set<Integer> keySet = pktInBuffer.keySet();
+        ConcurrentHashMap.KeySetView<Integer, Long> keySet = pktInBuffer.keySet();
         keySet.forEach((key) -> {
             if (currentMillis - pktInBuffer.get(key) > netsecConfig.getHandlerMaxBufferTime()) {
                 // This also removes the entry from the pktInBuffer map and
