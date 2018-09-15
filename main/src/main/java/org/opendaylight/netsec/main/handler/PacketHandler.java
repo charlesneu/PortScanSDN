@@ -7,155 +7,174 @@
  */
 package org.opendaylight.netsec.main.handler;
 
-import java.util.List;
-import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.opendaylight.netsec.main.flow.FlowWriterService;
-import org.opendaylight.netsec.main.util.OpenflowUtils;
+import org.opendaylight.netsec.main.flow.NetsecPacket;
+import org.opendaylight.netsec.main.util.PacketUtils;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.netsec.rev180911.NetsecPacketListener;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.netsec.rev180911.NetsecPacketReceived;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.netsec.netsec.config.rev180901.NetsecConfig;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingListener;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketReceived;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class PacketHandler implements NetsecPacketListener {
+public class PacketHandler implements PacketProcessingListener, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(PacketHandler.class);
-    private final FlowWriterService flowWriterService;
 
-    private final DataBroker dataBroker;
+    final NetsecConfig netsecConfig;
+    final FlowWriterService flowWriterService;
 
-    public PacketHandler(FlowWriterService flowWriterService, final DataBroker dataBroker) {
+    /* Number of packets received */
+    private AtomicInteger packetCount;
+
+    /* Last packet in received, used to not process repeated packets */
+    private final Map<Integer, Long> pktInBuffer;
+
+    private final ExecutorService publishExecutor =
+            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+    public PacketHandler(final NetsecConfig netsecConfig, final FlowWriterService flowWriterService) {
+        this.netsecConfig = netsecConfig;
+        this.packetCount = new AtomicInteger(0);
+        this.pktInBuffer = new HashMap<>();
         this.flowWriterService = flowWriterService;
-        this.dataBroker = dataBroker;
+        LOG.info("PacketIn listener started");
     }
 
     @Override
-    public void onNetsecPacketReceived(NetsecPacketReceived packet) {
-        LOG.info("Entrou no onPacketReceived");
+    public void onPacketReceived(PacketReceived packetReceived) {
+        LOG.trace("PacketIn Received");
 
-
-        InstanceIdentifier<Node> nodeIId = packet.getIngressPort().firstIdentifierOf(Node.class);
-        //InstanceIdentifier<NodeConnector> inNodeConnectorIi =
-        // packet.getIngressPort().firstIdentifierOf(NodeConnector.class);
-
-        LOG.trace("Pacote: {}", packet.toString());
-        Integer outPort = getOutPort(nodeIId, packet);
-        LOG.trace("OutPort {}", outPort);
-        Node node = OpenflowUtils.getOperationalData(dataBroker.newReadOnlyTransaction(), nodeIId);
-        List<NodeConnector> nodeConnetorList = node.getNodeConnector();
-        NodeConnector outNodeConnector = null;
-        for (NodeConnector nc : nodeConnetorList) {
-            LOG.trace("Found {}", nc.getId().getValue());
-            if (("" + outPort).equals(nc.getId().getValue().split(":")[2])) {
-                outNodeConnector = nc;
-            }
-        }
-        if (outNodeConnector == null) {
-            LOG.error("Output node connector not found.");
+        if (Objects.isNull(packetReceived)) {
             return;
         }
 
-//        InstanceIdentifier<NodeConnector> outNodeConnectorIi = InstanceIdentifier.builder(Nodes.class)
-//                .child(Node.class, nodeIId.firstKeyOf(Node.class))
-//                .child(NodeConnector.class, outNodeConnector.getKey())
-//                .build();
+        packetCount.incrementAndGet();
+        // If number of packets receiver too high, purge buffer
+        if (packetCount.incrementAndGet() > netsecConfig.getHandlerPacketCountPurge()) {
+            packetCount.getAndSet(0);
+            purgePktInBuffer();
+        }
+
+        final byte[] rawPacket = packetReceived.getPayload();
+
+        if (rawPacket.length < 52) { //Not TCP or UDP
+            return;
+        }
+
+        byte[] flags = PacketUtils.extractFlags(rawPacket);
+
+        int flag = (int) flags[0];
+
+        if (flag != 2) {
+            LOG.warn("Not SYN Packet, discarded.");
+            return;
+        }
+
+        NetsecPacket packet = NetsecPacket.builder()
+                .etherType(PacketUtils.extractEtherTypeAsInt(rawPacket))
+                .srcIpv4(PacketUtils.extractSrcIpAsString(rawPacket) + "/32")
+                .dstIpv4(PacketUtils.extractDstIpAsString(rawPacket) + "/32")
+                .srcMac(PacketUtils.extractSrcMacAsString(rawPacket))
+                .dstMac(PacketUtils.extractDstMacAsString(rawPacket))
+                .srcPort((int) PacketUtils.extractSrcPortNumberAsShort(rawPacket))
+                .dstPort((int) PacketUtils.extractDstPortNumberAsShort(rawPacket))
+                .incomeTime(LocalDateTime.now())
+                .ingressPort(packetReceived.getIngress().getValue()).build();
+
+        LOG.debug("Received from {} to {} on port {}.", packet.getSrcIpv4(),
+                packet.getDstIpv4(), packet.getDstPort());
+
+        // Process only IPv4 packets
+        if (!packet.getEtherType().equals(2048)) {
+            LOG.warn("Not Ipv4 {}", packet.getEtherType());
+            return;
+        }
+
+        // Since all packets sent to SF are PktIn, only need to handle the first
+        // one. In OpenFlow 1.5 we'll be able to do the PktIn on TCP Syn only.
+        if (bufferPktIn(packet)) {
+            LOG.trace("Ipv4PacketInHandler PacketIn buffered");
+            return;
+        }
+
+        // Get the metadata
+        if (packetReceived.getMatch() == null) {
+            LOG.error("Ipv4PacketInHandler Cant get packet flow match {}", packetReceived.toString());
+            return;
+        }
+
+        LOG.info("Publishing NetsecPacket {}", packet.toString());
+        publishExecutor.execute(() -> {
+            LOG.info("Adding flow");
+            Uri inputPort = packet.getIngressPort().firstKeyOf(NodeConnector.class).getId();
+
+            flowWriterService.addBidirecionalFlows(packet);
+        });
+
+
     }
 
+    /**
+     * Decide if packets with the same src/dst IP have already been processed.
+     * If they haven't been processed, store the
+     * IPs so they will be considered processed.
+     *
+     * @param netsecPacket destination IP
+     * @return {@code true} if the src/dst IP has already been processed, {@code false} otherwise
+     */
+    private boolean bufferPktIn(final NetsecPacket netsecPacket) {
+        int key = netsecPacket.toString().hashCode();
+        long currentMillis = System.currentTimeMillis();
+
+        Long bufferedTime = pktInBuffer.get(key);
+
+        // If the entry does not exist, add it and return false indicating the
+        // packet needs to be processed
+        if (Objects.isNull(bufferedTime)) {
+            // Add the entry
+            pktInBuffer.put(key, currentMillis);
+            return false;
+        }
+
+        // If the entry is old, update it and return false indicating the packet
+        // needs to be processed
+        if (currentMillis - bufferedTime > netsecConfig.getHandlerMaxBufferTime()) {
+            // Update the entry
+            pktInBuffer.put(key, currentMillis);
+            return false;
+        }
+
+        return true;
+    }
 
     /**
-     * Returns the output port number according destination IP address and Node.
-     *
-     * @param nodeIId the node instance identifier.
-     * @param packet  the packet header fields.
-     * @return the output port number.
+     * Purge packets that have been in the PktIn buffer too long.
      */
-    private Integer getOutPort(InstanceIdentifier<Node> nodeIId, NetsecPacketReceived packet) {
+    private void purgePktInBuffer() {
+        long currentMillis = System.currentTimeMillis();
+        Set<Integer> keySet = pktInBuffer.keySet();
+        keySet.forEach((key) -> {
+            if (currentMillis - pktInBuffer.get(key) > netsecConfig.getHandlerMaxBufferTime()) {
+                // This also removes the entry from the pktInBuffer map and
+                // doesnt invalidate iteration
+                keySet.remove(key);
+            }
+        });
+    }
 
-
-        switch (nodeIId.firstKeyOf(Node.class).getId().getValue().split(":")[1]) {
-            case "1":
-                switch (packet.getDstIpv4()) {
-                    case "10.0.0.11/32":
-                        return 1;
-                    case "10.0.0.12/32":
-                        return 2;
-                    case "10.0.0.13/32":
-                        return 3;
-                    case "10.0.0.21/32":
-                    case "10.0.0.31/32":
-                    case "10.0.0.32/32":
-                    case "10.0.0.33/32":
-                    case "10.0.0.41/32":
-                    case "10.0.0.42/32":
-                        return 4;
-                    default:
-                        LOG.error("case 1 default");
-                }
-                break;
-            case "2":
-                switch (packet.getDstIpv4()) {
-                    case "10.0.0.11/32":
-                    case "10.0.0.12/32":
-                    case "10.0.0.13/32":
-                        return 1;
-                    case "10.0.0.21/32":
-                        return 2;
-                    case "10.0.0.31/32":
-                    case "10.0.0.32/32":
-                    case "10.0.0.33/32":
-                        return 3;
-                    case "10.0.0.41/32":
-                    case "10.0.0.42/32":
-                        return 4;
-                    default:
-                        LOG.error("case 2 default");
-                }
-                break;
-            case "3":
-                switch (packet.getDstIpv4()) {
-                    case "10.0.0.11/32":
-                    case "10.0.0.12/32":
-                    case "10.0.0.13/32":
-                    case "10.0.0.21/32":
-                        return 1;
-                    case "10.0.0.31/32":
-                        return 2;
-                    case "10.0.0.32/32":
-                        return 3;
-                    case "10.0.0.33/32":
-                        return 4;
-                    case "10.0.0.41/32":
-                    case "10.0.0.42/32":
-                        return 1;
-                    default:
-                        LOG.error("case 3 default");
-                }
-                break;
-            case "4":
-                switch (packet.getDstIpv4()) {
-                    case "10.0.0.11/32":
-                    case "10.0.0.12/32":
-                    case "10.0.0.13/32":
-                    case "10.0.0.21/32":
-                    case "10.0.0.31/32":
-                    case "10.0.0.32/32":
-                    case "10.0.0.33/32":
-                        return 1;
-                    case "10.0.0.41/32":
-                        return 2;
-                    case "10.0.0.42/32":
-                        return 3;
-                    default:
-                        break;
-                }
-                break;
-            default:
-                LOG.error("case geral default");
-                break;
-        }
-        return null;
+    @Override
+    public void close() {
+        LOG.info("Closing Packet Handler");
     }
 }

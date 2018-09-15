@@ -33,6 +33,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependencies>
 
         <dependency>
+            <groupId>org.opendaylight.openflowplugin</groupId>
+            <artifactId>odl-openflowplugin-southbound</artifactId>
+            <version>${openflowplugin.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+
+        <dependency>
             <groupId>org.opendaylight.netsec</groupId>
             <artifactId>netsec-main</artifactId>
             <version>${project.version}</version>

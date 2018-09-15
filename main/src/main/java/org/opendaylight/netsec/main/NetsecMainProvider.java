@@ -9,7 +9,7 @@ package org.opendaylight.netsec.main;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
-import org.opendaylight.netsec.main.flow.FlowWriterServiceImpl;
+import org.opendaylight.netsec.main.flow.FlowWriterService;
 import org.opendaylight.netsec.main.flow.InitialFlowWriter;
 import org.opendaylight.netsec.main.handler.PacketHandler;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.SalFlowService;
@@ -31,9 +31,9 @@ public class NetsecMainProvider {
     private final SalFlowService salFlowService;
 
     public NetsecMainProvider(final DataBroker dataBroker,
-            final NetsecConfig netsecConfig,
-            final NotificationProviderService notificationService,
-            final SalFlowService salFlowService) {
+                              final NetsecConfig netsecConfig,
+                              final NotificationProviderService notificationService,
+                              final SalFlowService salFlowService) {
         this.dataBroker = dataBroker;
         this.netsecConfig = netsecConfig;
         this.notificationService = notificationService;
@@ -64,13 +64,13 @@ public class NetsecMainProvider {
         } else {
             // Setup reactive flow writer
             LOG.info("Netsec will react to network traffic and install flows");
-            FlowWriterServiceImpl flowWriterService = new FlowWriterServiceImpl(salFlowService);
+            FlowWriterService flowWriterService = new FlowWriterService(salFlowService, dataBroker);
             flowWriterService.setFlowTableId(netsecConfig.getReactiveFlowTableId());
             flowWriterService.setFlowPriority(netsecConfig.getReactiveFlowPriority());
             flowWriterService.setFlowIdleTimeout(netsecConfig.getReactiveFlowIdleTimeout());
             flowWriterService.setFlowHardTimeout(netsecConfig.getReactiveFlowHardTimeout());
 
-            PacketHandler packetHandler = new PacketHandler(flowWriterService, dataBroker);
+            PacketHandler packetHandler = new PacketHandler(netsecConfig, flowWriterService);
             flowWriterReg = notificationService.registerNotificationListener(packetHandler);
         }
 

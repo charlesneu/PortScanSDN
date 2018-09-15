@@ -17,7 +17,14 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.ta
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.TableKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.Flow;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.FlowKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorRef;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeId;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnectorKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeKey;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
@@ -36,6 +43,7 @@ public final class OpenflowUtils {
     /**
      * Gets operational data from logical data store.
      *
+     * @param <T>                 a object that extends DataObject.
      * @param readOnlyTransaction a read only transaction instance.
      * @param identifier          the element (node, flow, table) instance identifier (path).
      * @return a data container which has structured contents, {@code null} if
@@ -60,6 +68,7 @@ public final class OpenflowUtils {
     /**
      * Gets configuration data from logical data store.
      *
+     * @param <T>                 a object that extends DataObject.
      * @param readOnlyTransaction a read only transaction instance.
      * @param identifier          the element (node, flow, table) instance identifier (path).
      * @return a data container which has structured contents, {@code null} if
@@ -103,7 +112,8 @@ public final class OpenflowUtils {
      * Gets a flow instance identifier from the table instance id passed by
      * argument.
      *
-     * @param tableId the table node instance identifier.
+     * @param tableId  the table node instance identifier.
+     * @param flowName the name of the flow.
      * @return a flow instance identifier.
      */
     public static InstanceIdentifier<Flow> getFlowInstanceId(InstanceIdentifier<Table> tableId, String flowName) {
@@ -113,4 +123,23 @@ public final class OpenflowUtils {
         return tableId.child(Flow.class, flowKey);
     }
 
+    public static NodeConnectorRef getNodeConnectorRef(NodeConnectorId nodeConnectorId) {
+        NodeId nodeId = getNodeId(nodeConnectorId);
+        return new NodeConnectorRef(InstanceIdentifier.builder(Nodes.class)
+                .child(Node.class, new NodeKey(nodeId))
+                .child(NodeConnector.class, new NodeConnectorKey(nodeConnectorId))
+                .build());
+    }
+
+    public static NodeId getNodeId(NodeConnectorId nodeConnectorId) {
+        if (nodeConnectorId == null) {
+            return null;
+        }
+        String[] tokens = nodeConnectorId.getValue().split(":");
+        if (tokens.length == 3) {
+            return new NodeId("openflow:" + Long.parseLong(tokens[1]));
+        } else {
+            return null;
+        }
+    }
 }

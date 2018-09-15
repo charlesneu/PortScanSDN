@@ -14,7 +14,7 @@ module netsec-config {
     container netsec-config {
         leaf is-learning-only-mode {
             type boolean;
-            default true;
+            default false;
         }
         leaf is-install-dropall-flow {
             type boolean;
@@ -51,6 +51,14 @@ module netsec-config {
         leaf reactive-flow-idle-timeout {
             type uint16;
             default 600;
+        }
+        leaf handler-packet-count-purge {
+            type uint16;
+            default 600;
+        }
+        leaf handler-max-buffer-time {
+            type uint16;
+            default 60000;
         }
     }
 }
