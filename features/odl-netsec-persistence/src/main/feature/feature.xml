@@ -9,6 +9,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <repository>mvn:org.apache.karaf.features/enterprise/${karaf.version}/xml/features</repository>
     <repository>mvn:org.ops4j.pax.jdbc/pax-jdbc-features/1.1.0/xml/features</repository>
     <feature name="odl-netsec-persistence" version="${project.version}">
+        <configfile finalname="etc/org.ops4j.datasource-netsec.cfg">
+            mvn:org.opendaylight.netsec/netsec-persistence-impl/${project.version}/cfg/datasource
+        </configfile>
         <feature dependency="false" prerequisite="false">jdbc</feature>
         <feature dependency="false" prerequisite="false">transaction</feature>
         <feature dependency="false" prerequisite="false">jndi</feature>

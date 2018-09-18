@@ -22,14 +22,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <version>0.1.3</version>
     <packaging>feature</packaging>
     <name>OpenDaylight :: netsec :: persistence</name>
-    
+
     <properties>
         <mdsal.version>1.7.3</mdsal.version>
         <restconf.version>1.7.3</restconf.version>
         <dluxapps.version>0.7.3</dluxapps.version>
         <openflowplugin.version>0.6.3</openflowplugin.version>
     </properties>
- 
+
     <dependencies>
         <dependency>
             <groupId>org.opendaylight.controller</groupId>
@@ -67,7 +67,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <type>xml</type>
             <scope>runtime</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>org.opendaylight.netsec</groupId>
             <artifactId>netsec-persistence-api</artifactId>
@@ -78,8 +78,15 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
             <artifactId>netsec-persistence-impl</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.opendaylight.netsec</groupId>-->
+            <!--<artifactId>netsec-persistence-impl</artifactId>-->
+            <!--<version>0.1.3</version>-->
+            <!--<type>cfg</type>-->
+            <!--<classifier>datasource</classifier>-->
+        <!--</dependency>-->
     </dependencies>
-    
+
     <build>
         <resources>
             <resource>

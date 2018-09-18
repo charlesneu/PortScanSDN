@@ -37,12 +37,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependencies>
 
         <dependency>
-            <groupId>org.opendaylight.netsec</groupId>
-            <artifactId>netsec-handler-model</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.opendaylight.controller</groupId>
             <artifactId>sal-binding-api</artifactId>
         </dependency>
@@ -81,24 +75,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         </dependency>
     </dependencies>
 
-    <!--    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <configuration>
-                    <propertyExpansion>checkstyle.violationSeverity=error</propertyExpansion>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>findbugs-maven-plugin</artifactId>
-                <configuration>
-                    <failOnError>true</failOnError>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>-->
     <build>
         <plugins>
             <plugin>

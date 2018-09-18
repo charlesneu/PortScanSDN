@@ -5,19 +5,19 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.netsec.impl;
+package org.opendaylight.netsec.persistence.impl;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NetsecProvider {
+public class PersistenceProvider {
 
-    private static final Logger LOG = LoggerFactory.getLogger(NetsecProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PersistenceProvider.class);
 
     private final DataBroker dataBroker;
 
-    public NetsecProvider(final DataBroker dataBroker) {
+    public PersistenceProvider(final DataBroker dataBroker) {
         this.dataBroker = dataBroker;
     }
 
@@ -25,13 +25,13 @@ public class NetsecProvider {
      * Method called when the blueprint container is created.
      */
     public void init() {
-        LOG.info("NetsecProvider Session Initiated");
+        LOG.info("Netsec Persistence Session Initiated");
     }
 
     /**
      * Method called when the blueprint container is destroyed.
      */
     public void close() {
-        LOG.info("NetsecProvider Closed");
+        LOG.info("Netsec Persistence Closed");
     }
 }
