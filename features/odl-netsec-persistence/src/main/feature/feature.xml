@@ -11,18 +11,19 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <repository>mvn:org.apache.aries.jpa/jpa-features/2.6.1/xml/features</repository>
     <feature name="odl-netsec-persistence" version="${project.version}">
         <configfile finalname="etc/org.ops4j.datasource-netsecds.cfg">
-            mvn:org.opendaylight.netsec/netsec-persistence-impl/${project.version}/cfg/datasource
+            mvn:org.opendaylight.netsec/netsec-persistence/${project.version}/cfg/datasource
         </configfile>
 
+        <feature>jdbc</feature>
         <feature>pax-jdbc-postgresql</feature>
-        <feature>pax-jdbc-config</feature>
+        <feature>pax-jdbc-h2</feature>
         <feature>pax-jdbc-pool-dbcp2</feature>
         <feature>jndi</feature>
         <feature>transaction</feature>
-        <feature version="[2.2, 3)">jpa</feature>
+        <feature>jpa</feature>
         <!--<feature>jta</feature>-->
-        <feature version="[4.3, 5.3)">hibernate</feature>
-        <!--<feature>jdbc</feature>-->
-        <feature>transaction-api</feature>
+        <feature>hibernate</feature>
+        <feature>jdbc</feature>
+        <!--<feature>transaction-api</feature>-->
     </feature>
 </features>
