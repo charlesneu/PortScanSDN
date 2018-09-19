@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vi: set et smarttab sw=4 tabstop=4: -->
+<!--
+Copyright © 2018 Cássio Tatsch and others. All rights reserved.
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:odl="http://opendaylight.org/xmlns/blueprint/v1.0.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:jpa="http://aries.apache.org/xmlns/jpa/v2.0.0"
+           xmlns:tx="http://aries.apache.org/xmlns/transactions/v2.0.0"
+           xsi:schemaLocation="http://www.osgi.org/xmlns/blueprint/v1.0.0 http://osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd"
+           odl:use-default-for-reference-types="true">
+
+
+    <jpa:enable/>
+    <tx:enable/>
+
+    <!-- This bean contains a @PersistenceContext EntityManager -->
+    <bean id="netsecRepository" class="org.opendaylight.netsec.persistence.impl.NetsecRepository"/>
+
+    <bean id="netsecService" class="org.opendaylight.netsec.persistence.impl.NetsecServiceImpl">
+        <property name="netsecRepository" ref="netsecRepository"/>
+    </bean>
+
+    <service interface="org.opendaylight.netsec.persistence.NetsecService" ref="netsecService"/>
+
+
+</blueprint>

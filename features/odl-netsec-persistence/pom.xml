@@ -23,68 +23,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <packaging>feature</packaging>
     <name>OpenDaylight :: netsec :: persistence</name>
 
-    <properties>
-        <mdsal.version>1.7.3</mdsal.version>
-        <restconf.version>1.7.3</restconf.version>
-        <dluxapps.version>0.7.3</dluxapps.version>
-        <openflowplugin.version>0.6.3</openflowplugin.version>
-    </properties>
-
     <dependencies>
-        <dependency>
-            <groupId>org.opendaylight.controller</groupId>
-            <artifactId>odl-mdsal-all</artifactId>
-            <version>${mdsal.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.netconf</groupId>
-            <artifactId>odl-restconf</artifactId>
-            <version>${restconf.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.dluxapps</groupId>
-            <artifactId>odl-dluxapps-yangman</artifactId>
-            <version>${dluxapps.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.openflowplugin</groupId>
-            <artifactId>odl-openflowplugin-southbound</artifactId>
-            <version>${openflowplugin.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.karaf.features</groupId>
-            <artifactId>enterprise</artifactId>
-            <version>${karaf.version}</version>
-            <classifier>features</classifier>
-            <type>xml</type>
-            <scope>runtime</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.opendaylight.netsec</groupId>
-            <artifactId>netsec-persistence-api</artifactId>
+            <artifactId>netsec-persistence</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.opendaylight.netsec</groupId>
-            <artifactId>netsec-persistence-impl</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <!--<dependency>-->
-            <!--<groupId>org.opendaylight.netsec</groupId>-->
-            <!--<artifactId>netsec-persistence-impl</artifactId>-->
-            <!--<version>0.1.3</version>-->
-            <!--<type>cfg</type>-->
-            <!--<classifier>datasource</classifier>-->
-        <!--</dependency>-->
+
     </dependencies>
 
     <build>

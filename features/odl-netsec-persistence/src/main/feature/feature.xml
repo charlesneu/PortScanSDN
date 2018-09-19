@@ -8,17 +8,21 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
 <features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0" name="odl-netsec-persistence">
     <repository>mvn:org.apache.karaf.features/enterprise/${karaf.version}/xml/features</repository>
     <repository>mvn:org.ops4j.pax.jdbc/pax-jdbc-features/1.1.0/xml/features</repository>
+    <repository>mvn:org.apache.aries.jpa/jpa-features/2.6.1/xml/features</repository>
     <feature name="odl-netsec-persistence" version="${project.version}">
-        <configfile finalname="etc/org.ops4j.datasource-netsec.cfg">
+        <configfile finalname="etc/org.ops4j.datasource-netsecds.cfg">
             mvn:org.opendaylight.netsec/netsec-persistence-impl/${project.version}/cfg/datasource
         </configfile>
-        <feature dependency="false" prerequisite="false">jdbc</feature>
-        <feature dependency="false" prerequisite="false">transaction</feature>
-        <feature dependency="false" prerequisite="false">jndi</feature>
-        <feature dependency="false" prerequisite="false">pax-jdbc-h2</feature>
-        <feature dependency="false" prerequisite="false">pax-jdbc-config</feature>
-        <feature dependency="false" prerequisite="false">pax-jdbc-pool-dbcp2</feature>
-        <feature dependency="false" prerequisite="false">jpa</feature>
-        <feature dependency="false" prerequisite="false">hibernate</feature>
+
+        <feature>pax-jdbc-postgresql</feature>
+        <feature>pax-jdbc-config</feature>
+        <feature>pax-jdbc-pool-dbcp2</feature>
+        <feature>jndi</feature>
+        <feature>transaction</feature>
+        <feature version="[2.2, 3)">jpa</feature>
+        <!--<feature>jta</feature>-->
+        <feature version="[4.3, 5.3)">hibernate</feature>
+        <!--<feature>jdbc</feature>-->
+        <feature>transaction-api</feature>
     </feature>
 </features>
