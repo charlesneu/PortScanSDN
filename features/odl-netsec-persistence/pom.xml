@@ -23,16 +23,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <packaging>feature</packaging>
     <name>OpenDaylight :: netsec :: persistence</name>
 
-    <dependencies>
-
-        <dependency>
-            <groupId>org.opendaylight.netsec</groupId>
-            <artifactId>netsec-persistence</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-    </dependencies>
-
     <build>
         <resources>
             <resource>
@@ -40,6 +30,40 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
                 <filtering>true</filtering>
             </resource>
         </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>resources</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-artifacts</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>target/feature/feature.xml</file>
+                                    <type>xml</type>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
 </project>

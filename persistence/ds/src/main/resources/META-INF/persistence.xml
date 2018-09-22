@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright © 2018 Cássio Tatsch and others. All rights reserved.
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+
+    <persistence-unit name="netsecpu" transaction-type="JTA">
+        <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+
+        <!-- Only used when transaction-type=JTA -->
+        <jta-data-source>osgi:service/javax.sql.DataSource/(osgi.jndi.service.name=netsecds)</jta-data-source>
+
+        <!-- Only used when transaction-type=RESOURCE_LOCAL -->
+        <non-jta-data-source>osgi:service/javax.sql.DataSource/(osgi.jndi.service.name=netsecds)</non-jta-data-source>
+        <class>org.opendaylight.netsec.persistence.api.NetsecFlow</class>
+        <properties>
+            <property name="eclipselink.target-database" value="HSQL" />
+            <property name="eclipselink.ddl-generation" value="drop-and-create-tables" />
+            <property name="eclipselink.ddl-generation.output-mode" value="database" />
+        </properties>
+    </persistence-unit>
+
+</persistence>

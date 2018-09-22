@@ -9,21 +9,61 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <repository>mvn:org.apache.karaf.features/enterprise/${karaf.version}/xml/features</repository>
     <repository>mvn:org.ops4j.pax.jdbc/pax-jdbc-features/1.1.0/xml/features</repository>
     <repository>mvn:org.apache.aries.jpa/jpa-features/2.6.1/xml/features</repository>
-    <feature name="odl-netsec-persistence" version="${project.version}">
-        <configfile finalname="etc/org.ops4j.datasource-netsecds.cfg">
-            mvn:org.opendaylight.netsec/netsec-persistence/${project.version}/cfg/datasource
-        </configfile>
 
-        <feature>jdbc</feature>
-        <feature>pax-jdbc-postgresql</feature>
-        <feature>pax-jdbc-h2</feature>
-        <feature>pax-jdbc-pool-dbcp2</feature>
-        <feature>jndi</feature>
-        <feature>transaction</feature>
-        <feature>jpa</feature>
-        <!--<feature>jta</feature>-->
-        <feature>hibernate</feature>
-        <feature>jdbc</feature>
-        <!--<feature>transaction-api</feature>-->
+    <feature name="odl-netsec-persistence-datasource" version="${project.version}">
+        <config name="org.ops4j.datasource-netsecds">
+            osgi.jdbc.driver.name=PostgreSQL JDBC Driver
+            osgi.jdbc.driver.class=org.postgresql.Driver
+            pool=dbcp2
+            xa=true
+            url=jdbc:postgresql://localhost:5432/netsec
+            dataSourceName=netsecds
+            user=netsec
+            password=netsec
+        </config>
+        <!--<config name="org.ops4j.datasource-netsecds">-->
+            <!--osgi.jdbc.driver.class=org.h2.Driver-->
+            <!--databaseName=netsec;create=true-->
+            <!--dataSourceName=netsecds-->
+        <!--</config>-->
+        <capability>
+            osgi.service;objectClass=javax.sql.DataSource;effective:=active;osgi.jndi.service.name=netsecds
+        </capability>
     </feature>
+
+    <feature name="odl-netsec-persistence-common" version="${project.version}">
+        <feature>transaction</feature>
+        <feature>jndi</feature>
+        <feature>pax-jdbc-config</feature>
+        <feature>pax-jdbc-h2</feature>
+        <feature>pax-jdbc-postgresql</feature>
+        <feature>pax-jdbc-pool-dbcp2</feature>
+        <feature>jdbc</feature>
+        <feature dependency="true">aries-blueprint</feature>
+        <feature version="[2,3)">jpa</feature>
+        <feature version="[2,3)">eclipselink</feature>
+        <feature version="[5,6)">hibernate</feature>
+        <feature version="${project.version}">odl-netsec-persistence-datasource</feature>
+        <bundle>mvn:org.opendaylight.netsec/netsec-persistence-api/${project.version}</bundle>
+    </feature>
+
+    <!-- Using blueprint -->
+    <feature name="odl-netsec-persistence" version="${project.version}">
+    <feature version="${project.version}">odl-netsec-persistence-datasource</feature>
+    <feature version="${project.version}">odl-netsec-persistence-common</feature>
+    <bundle>mvn:org.opendaylight.netsec/netsec-persistence-impl/${project.version}</bundle>
+    </feature>
+
+    <!-- Using ds -->
+    <!--<feature name="odl-netsec-persistence" version="${project.version}">-->
+        <!--<feature>scr</feature>-->
+        <!--<feature version="${project.version}">odl-netsec-persistence-common</feature>-->
+        <!--<bundle>mvn:org.opendaylight.netsec/netsec-persistence-ds/${project.version}</bundle>-->
+    <!--</feature>-->
+
+    <!--<feature name="odl-netsec-persistence-command" version="${project.version}">-->
+        <!--<feature version="${project.version}">odl-netsec-persistence-common</feature>-->
+        <!--<bundle>mvn:org.opendaylight.netsec/netsec-persistence-command/${project.version}</bundle>-->
+    <!--</feature>-->
+
 </features>
