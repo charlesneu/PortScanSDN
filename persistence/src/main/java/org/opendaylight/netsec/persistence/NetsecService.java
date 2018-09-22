@@ -13,6 +13,6 @@ public interface NetsecService {
 
     List<NetsecFlow> list();
 
-    NetsecFlow create(NetsecFlow person);
+    void createOrUpdate(NetsecFlow flow);
 
 }

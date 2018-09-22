@@ -8,74 +8,102 @@
 package org.opendaylight.netsec.persistence;
 
 import java.io.Serializable;
+import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Data
 @Entity
 @Table(name = "netsec_flow")
+@NamedQueries(value = {
+        @NamedQuery(name = "NetsecFlow.findAll", query = "SELECT n FROM NetsecFlow n"),
+        @NamedQuery(name = "NetsecFlow.findByFlowName",
+                query = "SELECT n FROM NetsecFlow n WHERE n.flowName = :flowName")
+})
 public class NetsecFlow implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    private String lastName;
+    private Integer id;
 
     @Column
     private String flowName;
 
     @Column
-    private Integer getId;
+    private Integer etherType;
 
     @Column
-    private Integer getEtherType;
+    private String inPort;
 
     @Column
-    private String getFlowName;
+    private String outPort;
 
     @Column
-    private String getInPort;
+    private String srcIpv4;
 
     @Column
-    private String getOutPort;
+    private String dstIpv4;
 
     @Column
-    private String getSrcIpv4;
+    private String srcMac;
 
     @Column
-    private String getDstIpv4;
+    private String dstMac;
 
     @Column
-    private String getSrcMac;
+    private Integer srcPort;
 
     @Column
-    private String getDstMac;
-
-    @Column
-    private Integer getSrcPort;
-
-    @Column
-    private Integer getDstPort;
-
-    @Column
-    private String getIncomeDateTime;
+    private Integer dstPort;
 
     @Column
     private String ingressPort;
 
     @Column
-    private Long getDurationSeconds;
+    private Long durationSeconds;
 
     @Column
-    private Long getDurationNanoSeconds;
+    private Long durationNanoSeconds;
 
     @Column
-    private Long getPacketCount;
+    private Long packetCount;
 
     @Column
-    private Long getByteCount;
+    private Long byteCount;
 
+    @Column
+    @Getter(value = AccessLevel.NONE)
+    @Setter(value = AccessLevel.NONE)
+    private Date createdDate;
+
+    @Column
+    @Getter(value = AccessLevel.NONE)
+    @Setter(value = AccessLevel.NONE)
+    private Date updatedDate;
+
+    public Date getCreatedDate() {
+        return new Date(createdDate.getTime());
+    }
+
+    public void setCreatedDate(Date createdDate) {
+        this.createdDate = new Date(createdDate.getTime());
+    }
+
+    public Date getUpdatedDate() {
+        return new Date(updatedDate.getTime());
+    }
+
+    public void setUpdatedDate(Date updatedDate) {
+        this.updatedDate = new Date(updatedDate.getTime());
+    }
 }

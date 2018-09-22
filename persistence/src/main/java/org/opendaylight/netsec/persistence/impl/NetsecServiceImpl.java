@@ -7,17 +7,18 @@
  */
 package org.opendaylight.netsec.persistence.impl;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
+
 import org.opendaylight.netsec.persistence.NetsecFlow;
 import org.opendaylight.netsec.persistence.NetsecService;
 import org.ops4j.pax.cdi.api.OsgiServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
 
 @OsgiServiceProvider(classes = {NetsecService.class})
 @Transactional
@@ -41,15 +42,23 @@ public class NetsecServiceImpl implements NetsecService {
     }
 
     @Override
-    public NetsecFlow create(NetsecFlow flow) {
-        LOG.debug("CREATE");
-        entityManager.persist(flow);
-        entityManager.flush();
-        return flow;
-    }
+    public void createOrUpdate(NetsecFlow flow) {
 
-    public void delete(String... names) {
-        LOG.debug("DELETE");
-        entityManager.remove(names);
+        NetsecFlow flowEntity = (NetsecFlow) entityManager.createNamedQuery("NetsecFlow.findByFlowName")
+                .setMaxResults(1)
+                .getSingleResult();
+
+        if (Objects.isNull(flowEntity)) {
+            flow.setCreatedDate(new Date());
+            flow.setUpdatedDate(flow.getCreatedDate());
+            entityManager.persist(flow);
+        } else {
+            flowEntity.setByteCount(flow.getByteCount());
+            flowEntity.setPacketCount(flow.getPacketCount());
+            flowEntity.setDurationSeconds(flow.getDurationSeconds());
+            flowEntity.setDurationNanoSeconds(flow.getDurationNanoSeconds());
+            flowEntity.setUpdatedDate(new Date());
+            entityManager.merge(flowEntity);
+        }
     }
 }
