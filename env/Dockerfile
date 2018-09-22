@@ -1,4 +1,5 @@
 FROM ubuntu
+LABEL maintainer "Cassio Tatsch <jtatschcassio@gmail.com>"
 
 USER root
 WORKDIR /root
@@ -20,7 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tcpdump \
     vim \
     x11-xserver-utils \
-    xterm \ 
+    xterm \
     git \
  && rm -rf /var/lib/apt/lists/* \
  && chmod +x /ENTRYPOINT.sh \

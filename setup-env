@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+### Setup and Start PostgresSQL
+docker run --name nspostgres -d \
+-p 5432:5432 \
+-e POSTGRES_USER=netsec \
+-e POSTGRES_PASSWORD=netsec \
+-e POSTGRES_DB=netsec \
+postgres:alpine
+
+### Create Mininet Image
+docker build -t nsmininet ./env
+
+### Run Mininet Image (Execute everytime you need mininet)
+# allow access from localhost
+xhost + 127.0.0.1
+
+# run with X11 forwarding and keep running until it quits
+docker run -it --rm \
+--network "host" \
+--privileged \
+-e DISPLAY=docker.for.mac.localhost:0 \
+-v /tmp/.X11-unix:/tmp/.X11-unix \
+-v /lib/modules:/lib/modules nsmininet
