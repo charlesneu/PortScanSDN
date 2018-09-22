@@ -187,6 +187,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>lombok</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.ops4j.pax.cdi</groupId>
+            <artifactId>pax-cdi-api</artifactId>
+            <version>1.0.0.RC2</version>
+        </dependency>
 
     </dependencies>
 

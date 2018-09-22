@@ -19,14 +19,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <jpa:enable/>
     <tx:enable/>
 
-    <!-- This bean contains a @PersistenceContext EntityManager -->
-    <bean id="netsecRepository" class="org.opendaylight.netsec.persistence.impl.NetsecRepository"/>
-
-    <bean id="netsecService" class="org.opendaylight.netsec.persistence.impl.NetsecServiceImpl">
-        <property name="netsecRepository" ref="netsecRepository"/>
-    </bean>
+    <bean id="netsecService" class="org.opendaylight.netsec.persistence.impl.NetsecServiceImpl"/>
 
     <service interface="org.opendaylight.netsec.persistence.NetsecService" ref="netsecService"/>
-
 
 </blueprint>

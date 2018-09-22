@@ -13,8 +13,6 @@ public interface NetsecService {
 
     List<NetsecFlow> list();
 
-    void create(NetsecFlow person);
-
-    void delete(String... names);
+    NetsecFlow create(NetsecFlow person);
 
 }

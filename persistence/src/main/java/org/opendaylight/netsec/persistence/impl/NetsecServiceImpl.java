@@ -8,38 +8,48 @@
 package org.opendaylight.netsec.persistence.impl;
 
 import java.util.List;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.transaction.Transactional;
 import org.opendaylight.netsec.persistence.NetsecFlow;
 import org.opendaylight.netsec.persistence.NetsecService;
+import org.ops4j.pax.cdi.api.OsgiServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+
+@OsgiServiceProvider(classes = {NetsecService.class})
+@Transactional
 public class NetsecServiceImpl implements NetsecService {
 
     private static final Logger LOG = LoggerFactory.getLogger(NetsecServiceImpl.class);
 
-    private NetsecRepository netsecRepository;
+    @PersistenceContext(unitName = "netsecpu")
+    private EntityManager entityManager;
 
-    public void setNetsecRepository(NetsecRepository netsecRepository) {
-
-        LOG.debug("Createin repository");
-        this.netsecRepository = netsecRepository;
+    public void setEntityManager(EntityManager entityManager) {
+        LOG.debug("Creating entityManager");
+        this.entityManager = entityManager;
     }
 
     @Override
+    @Transactional(Transactional.TxType.SUPPORTS)
     public List<NetsecFlow> list() {
         LOG.debug("LIST");
-        return netsecRepository.list();
+        return entityManager.createQuery("select n from NetsecFlow n").getResultList();
     }
 
     @Override
-    public void create(NetsecFlow flow) {
+    public NetsecFlow create(NetsecFlow flow) {
         LOG.debug("CREATE");
-        netsecRepository.create(flow);
+        entityManager.persist(flow);
+        entityManager.flush();
+        return flow;
     }
 
-    @Override
     public void delete(String... names) {
         LOG.debug("DELETE");
-        netsecRepository.delete(names);
+        entityManager.remove(names);
     }
 }
