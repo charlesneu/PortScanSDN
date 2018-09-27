@@ -1,0 +1,9 @@
+image: maven:latest
+
+variables:
+  MAVEN_CLI_OPTS: "-s settings.xml --batch-mode"
+
+build:
+  stage: build
+  script:
+    - mvn $MAVEN_CLI_OPTS install
