@@ -1,2 +1,2 @@
 #!/bin/bash
-mn --custom nstopo.py --topo nstopo --controller=remote,ip=127.0.0.1,port=6633 --switch ovs,protocols=OpenFlow13
+mn --custom nstopo.py --topo nstopo --controller=remote,ip=host.docker.internal,port=6633 --switch ovs,protocols=OpenFlow13

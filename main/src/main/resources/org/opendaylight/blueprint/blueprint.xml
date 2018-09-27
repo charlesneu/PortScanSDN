@@ -26,7 +26,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <odl:rpc-service id="salFlowService"
                      interface="org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.SalFlowService"/>
 
-    <!--<service id="netsecService" interface="org.opendaylight.netsec.persistence.NetsecService"/>-->
+    <reference id="netsecService" interface="org.opendaylight.netsec.persistence.api.NetsecFlowService"/>
 
     <bean id="provider"
           class="org.opendaylight.netsec.main.NetsecMainProvider"
@@ -35,7 +35,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <argument ref="netsecConfig"/>
         <argument ref="notificationService"/>
         <argument ref="salFlowService"/>
-        <!--<argument ref="netsecService"/>-->
+        <argument ref="netsecService"/>
     </bean>
 
 </blueprint>

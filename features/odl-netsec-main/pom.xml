@@ -39,7 +39,15 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
-        
+
+        <dependency>
+            <groupId>org.opendaylight.netsec</groupId>
+            <artifactId>odl-netsec-persistence</artifactId>
+            <version>${project.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+
         <dependency>
             <groupId>org.opendaylight.netsec</groupId>
             <artifactId>netsec-main</artifactId>
