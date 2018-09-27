@@ -43,7 +43,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                     <instructions>
                         <Export-Package>org.opendaylight.netsec.persistence.api</Export-Package>
                         <Import-Package>
-                            javax.persistence;version="[2,3)",
                             org.hibernate.proxy,
                             javassist.util.proxy,
                             *

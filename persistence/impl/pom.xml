@@ -23,15 +23,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <packaging>bundle</packaging>
 
     <dependencies>
+
+
         <dependency>
-            <groupId>org.opendaylight.netsec</groupId>
-            <artifactId>netsec-persistence-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.persistence</groupId>
-            <artifactId>javax.persistence</artifactId>
-            <version>2.1.0</version>
+            <groupId>org.hibernate.javax.persistence</groupId>
+            <artifactId>hibernate-jpa-2.1-api</artifactId>
+            <version>1.0.2.Final</version>
         </dependency>
         <dependency>
             <groupId>javax.transaction</groupId>
@@ -39,13 +36,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <version>1.2</version>
         </dependency>
         <dependency>
-            <groupId>javax.interceptor</groupId>
-            <artifactId>javax.interceptor-api</artifactId>
-            <version>1.2</version>
-        </dependency>
-        <dependency>
             <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-osgi</artifactId>
+            <artifactId>hibernate-core</artifactId>
             <version>5.2.9.Final</version>
         </dependency>
         <dependency>
@@ -54,20 +46,67 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <version>5.2.9.Final</version>
             <scope>test</scope>
         </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.hibernate</groupId>-->
+            <!--<artifactId>hibernate-validator</artifactId>-->
+            <!--<version>5.2.4.Final</version>-->
+        <!--</dependency>-->
+
+        <dependency>
+            <groupId>org.opendaylight.netsec</groupId>
+            <artifactId>netsec-persistence-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!--<dependency>-->
+        <!--<groupId>org.eclipse.persistence</groupId>-->
+        <!--<artifactId>javax.persistence</artifactId>-->
+        <!--<version>2.1.0</version>-->
+        <!--</dependency>-->
+
+        <dependency>
+        <groupId>javax.interceptor</groupId>
+        <artifactId>javax.interceptor-api</artifactId>
+        <version>1.2</version>
+        </dependency>
+        <!--<dependency>-->
+        <!--<groupId>org.hibernate</groupId>-->
+        <!--<artifactId>hibernate-osgi</artifactId>-->
+        <!--<version>5.2.9.Final</version>-->
+        <!--</dependency>-->
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Meta-Persistence>META-INF/persistence.xml</Meta-Persistence>
-                        <Import-Package>
-                            javax.persistence;version="[2,3)",
-                            *
-                        </Import-Package>
+                        <!--<Import-Package>-->
+                            <!--org.hibernate.proxy, javassist.util.proxy, *-->
+                        <!--</Import-Package>-->
+                        <!--<Export-Service></Export-Service>-->
+                        <Export-Package>
+                            org.opendaylight.netsec.persistence.impl.*
+                        </Export-Package>
+                        <Meta-Persistence>
+                            META-INF/persistence.xml
+                        </Meta-Persistence>
                     </instructions>
                 </configuration>
             </plugin>

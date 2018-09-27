@@ -45,6 +45,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
         <feature version="[5,6)">hibernate</feature>
         <feature version="${project.version}">odl-netsec-persistence-datasource</feature>
         <bundle>mvn:org.opendaylight.netsec/netsec-persistence-api/${project.version}</bundle>
+        <capability>
+            osgi.service;objectClass=javax.persistence.spi.PersistenceProvider;javax.persistence.provider=org.hibernate.jpa.HibernatePersistenceProvider;effective:=active
+        </capability>
     </feature>
 
     <!-- Using blueprint -->
