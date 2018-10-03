@@ -30,29 +30,59 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <openflowplugin.version>0.6.3</openflowplugin.version>
     </properties>
 
-    <dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <!-- project specific dependencies -->
+            <dependency>
+                <groupId>org.opendaylight.netsec</groupId>
+                <artifactId>netsec-artifacts</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
-        <dependency>
-            <groupId>org.opendaylight.openflowplugin</groupId>
-            <artifactId>odl-openflowplugin-southbound</artifactId>
-            <version>${openflowplugin.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>org.opendaylight.netsec</groupId>
-            <artifactId>odl-netsec-persistence</artifactId>
-            <version>${project.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>org.opendaylight.netsec</groupId>
-            <artifactId>netsec-main</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-    </dependencies>
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/feature</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>resources</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-artifacts</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>target/feature/feature.xml</file>
+                                    <type>xml</type>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

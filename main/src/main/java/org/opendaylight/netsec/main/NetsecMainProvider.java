@@ -13,7 +13,6 @@ import org.opendaylight.netsec.main.collection.FlowStatsCollection;
 import org.opendaylight.netsec.main.flow.FlowWriterService;
 import org.opendaylight.netsec.main.flow.InitialFlowWriter;
 import org.opendaylight.netsec.main.handler.PacketHandler;
-import org.opendaylight.netsec.persistence.api.NetsecFlowService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.service.rev130819.SalFlowService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netsec.netsec.config.rev180901.NetsecConfig;
 import org.opendaylight.yangtools.concepts.Registration;
@@ -32,18 +31,18 @@ public class NetsecMainProvider {
     private final NotificationProviderService notificationService;
     private final SalFlowService salFlowService;
     private FlowStatsCollection statsCollection;
-    private final NetsecFlowService netsecService;
+//    private final NetsecFlowService netsecService;
 
     public NetsecMainProvider(final DataBroker dataBroker,
                               final NetsecConfig netsecConfig,
                               final NotificationProviderService notificationService,
-                              final SalFlowService salFlowService,
-                              final NetsecFlowService netsecService) {
+                              final SalFlowService salFlowService/*,
+                              final NetsecFlowService netsecService*/) {
         this.dataBroker = dataBroker;
         this.netsecConfig = netsecConfig;
         this.notificationService = notificationService;
         this.salFlowService = salFlowService;
-        this.netsecService = netsecService;
+//        this.netsecService = netsecService;
     }
 
     /**
